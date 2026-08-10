@@ -1,0 +1,10 @@
+{
+  "name": "sample-consumer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "typed-totp": "file:..",
+    "typescript": "^7.0.2"
+  }
+}
