@@ -45,13 +45,18 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run typecheck && npm run test && npm run build",
-    "prepare": "husky"
+    "prepublishOnly": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "prepare": "husky",
+    "lint": "eslint ."
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-plugin-sonarjs": "^4.2.0",
     "husky": "^9.1.7",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.66.0",
     "vitest": "^2.1.4"
   }
 }
