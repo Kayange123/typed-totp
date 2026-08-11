@@ -272,6 +272,11 @@ npm run build       # tsup -> dist/ (ESM + .d.ts + source maps)
 
 This repo uses [Husky](https://typicode.github.io/husky/) to keep contributions consistent: `npm install` runs `prepare` automatically, which wires up a `pre-commit` hook (`.husky/pre-commit`) that runs `npm run typecheck && npm run lint && npm test` before every commit. A commit that fails typecheck, lint, or breaks a test — including the RFC 4226/6238 vector tests — is rejected locally, before it ever reaches CI or a reviewer.
 
+## Further reading
+
+- [CHANGELOG.md](./CHANGELOG.md) — version history.
+- [llms.txt](./llms.txt) — a condensed, link-structured overview of this package for LLM-based tools.
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).

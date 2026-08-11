@@ -35,6 +35,8 @@
     "dist",
     "README.md",
     "SECURITY.md",
+    "CHANGELOG.md",
+    "llms.txt",
     "LICENSE"
   ],
   "engines": {

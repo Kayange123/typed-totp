@@ -1,0 +1,66 @@
+# typed-totp
+
+> TypeScript-first, zero-runtime-dependency TOTP (RFC 6238) and HOTP (RFC 4226) library built around composable, dependency-injected abstractions — Clock, RandomSource, HmacProvider, SecretCodec, TokenComparator — with secure Web Crypto-backed defaults.
+
+typed-totp generates and verifies time-based (TOTP) and counter-based (HOTP) one-time passwords. It exposes a simple functional API for typical use and an object-oriented, dependency-injectable API for testing and customization. Zero runtime dependencies, ESM-only, targets Node.js >= 20 and any browser with Web Crypto. It is a cryptographic primitive, not a full MFA system: secret storage, replay protection, and rate limiting are the integrating application's responsibility (see SECURITY.md).
+
+Install: `npm install typed-totp`
+
+## Core docs
+
+- [README](https://github.com/Kayange123/typed-totp/blob/main/README.md): architecture, abstraction boundaries, both API levels, dependency-injection example, RFC compliance details, platform support.
+- [SECURITY](https://github.com/Kayange123/typed-totp/blob/main/SECURITY.md): what the library does and deliberately does not do, secret handling, clock drift, randomness, rate limiting guidance.
+- [CHANGELOG](https://github.com/Kayange123/typed-totp/blob/main/CHANGELOG.md): version history.
+- [LICENSE](https://github.com/Kayange123/typed-totp/blob/main/LICENSE): MIT.
+
+## Functional API (typical use)
+
+- `generateSecret(options?: { byteLength?: number }): string` — random Base32 secret.
+- `generateTotp(secret: string, options?): Promise<string>` — current TOTP code.
+- `verifyTotp(token: string, secret: string, options?): Promise<boolean>`
+- `verifyTotpDetailed(token: string, secret: string, options?): Promise<TotpVerificationResult>` — reports which time step matched.
+- `toOtpAuthUri(options: { issuer, account, secret, algorithm?, digits?, period? }): string` — `otpauth://` provisioning URI for QR codes.
+
+Source: [src/api/](https://github.com/Kayange123/typed-totp/tree/main/src/api)
+
+## Object-oriented / dependency-injectable API
+
+- `class Totp` — construct with `{ secret, algorithm?, digits?, period? }` plus optional `{ clock, hmac, codec, comparator }` dependency overrides. Methods: `generate()`, `verify()`, `verifyDetailed()`, `with(overrides)`.
+- `class Hotp` — the RFC 4226 primitive `Totp` delegates to (counter -> HMAC -> dynamic truncation -> decimal formatting).
+- `class TotpSecret` — immutable secret value object: `fromBase32()`, `fromBytes()`, `generate()`, `toBase32()`, `toBytes()`.
+- `class TotpConfiguration` — immutable, validated `{ algorithm, digits, period }`: `create()`, `with()`.
+- `class OtpAuthUriBuilder` — `build()` the `otpauth://` URI (what `toOtpAuthUri` wraps).
+
+Source: [src/domain/](https://github.com/Kayange123/typed-totp/tree/main/src/domain), [src/provisioning/](https://github.com/Kayange123/typed-totp/tree/main/src/provisioning)
+
+## Extension points (ports)
+
+Implement one of these to swap a collaborator; each ships a secure default and a JSDoc `@example` showing a custom implementation:
+
+- `Clock` (default: `SystemClock`; `FixedClock` for tests)
+- `RandomSource` (default: `WebCryptoRandomSource`)
+- `HmacProvider` (default: `WebCryptoHmacProvider`)
+- `SecretCodec` (default: `Base32Codec`)
+- `TokenComparator` (default: `ConstantTimeComparator`)
+
+Source: [src/ports/](https://github.com/Kayange123/typed-totp/tree/main/src/ports), [src/adapters/](https://github.com/Kayange123/typed-totp/tree/main/src/adapters)
+
+## Errors
+
+`TotpError` (base) with subclasses `InvalidSecretError`, `InvalidConfigurationError`, `UnsupportedAlgorithmError`. `verify`/`verifyTotp` never throw on a wrong or malformed token — they return `false`.
+
+Source: [src/errors/index.ts](https://github.com/Kayange123/typed-totp/blob/main/src/errors/index.ts)
+
+## Full export list
+
+[src/index.ts](https://github.com/Kayange123/typed-totp/blob/main/src/index.ts) is the public barrel — every exported name is listed there.
+
+## Verification
+
+- RFC 4226 and RFC 6238 official test vectors: [test/rfc/](https://github.com/Kayange123/typed-totp/tree/main/test/rfc)
+- Per-component unit tests: [test/unit/](https://github.com/Kayange123/typed-totp/tree/main/test/unit)
+- External-consumer smoke test (installs the built package as a local `file:` dependency): [sample-project/](https://github.com/Kayange123/typed-totp/tree/main/sample-project)
+
+## Optional
+
+- [eslint.config.js](https://github.com/Kayange123/typed-totp/blob/main/eslint.config.js): static-analysis rules (typescript-eslint strict + eslint-plugin-sonarjs), each disabled rule documented inline with why.
