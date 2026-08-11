@@ -8,6 +8,19 @@ export type VerifyTotpOptions = Partial<TotpConfig> & TotpVerifyOptions;
  * Verifies a TOTP token against a Base32-encoded secret, returning only
  * whether it was valid. Use {@link verifyTotpDetailed} if you need to
  * know which time step matched (e.g. to detect clock drift).
+ *
+ * @param token the code the user submitted, e.g. `"482913"`.
+ * @param secret Base32-encoded shared secret.
+ * @param options config overrides, plus `window` for clock-drift tolerance.
+ * @returns `true` if `token` is valid for the current (or, with `window`, a nearby) time step.
+ *
+ * @example
+ * ```ts
+ * const valid = await verifyTotp(token, secret);
+ *
+ * // Tolerate one 30s step of client clock drift either side:
+ * const validWithDrift = await verifyTotp(token, secret, { window: 1 });
+ * ```
  */
 export async function verifyTotp(
   token: string,
@@ -18,7 +31,22 @@ export async function verifyTotp(
   return result.valid;
 }
 
-/** Like {@link verifyTotp}, but reports the matched time-step delta and counter. */
+/**
+ * Like {@link verifyTotp}, but reports the matched time-step delta and counter.
+ *
+ * @param token the code the user submitted.
+ * @param secret Base32-encoded shared secret.
+ * @param options config overrides, plus `window` for clock-drift tolerance.
+ * @returns a discriminated union: `{ valid: true, delta, counter }` on success, `{ valid: false }` otherwise.
+ *
+ * @example
+ * ```ts
+ * const result = await verifyTotpDetailed(token, secret, { window: 1 });
+ * if (result.valid) {
+ *   console.log(`matched step offset ${result.delta}`); // -1, 0, or 1
+ * }
+ * ```
+ */
 export async function verifyTotpDetailed(
   token: string,
   secret: string,

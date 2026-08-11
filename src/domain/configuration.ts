@@ -21,6 +21,12 @@ export const DEFAULT_TOTP_CONFIG: TotpConfig = {
  * throughout the codebase every time an algorithm/digits/period value is
  * used. Use {@link TotpConfiguration.with} to derive a new configuration
  * instead of mutating an existing one.
+ *
+ * @example
+ * ```ts
+ * const config = TotpConfiguration.create({ algorithm: "SHA-256", digits: 8 });
+ * const config60s = config.with({ period: 60 });
+ * ```
  */
 export class TotpConfiguration implements TotpConfig {
   private constructor(
@@ -29,7 +35,17 @@ export class TotpConfiguration implements TotpConfig {
     public readonly period: number
   ) {}
 
-  /** Creates a validated configuration, filling in unset fields with defaults. */
+  /**
+   * Creates a validated configuration, filling in unset fields with defaults
+   * (`SHA-1`, 6 digits, 30s period).
+   *
+   * @throws {InvalidConfigurationError} if `algorithm`, `digits`, or `period` is invalid.
+   *
+   * @example
+   * ```ts
+   * const config = TotpConfiguration.create({ digits: 8, period: 60 });
+   * ```
+   */
   static create(config: Partial<TotpConfig> = {}): TotpConfiguration {
     const algorithm = config.algorithm ?? DEFAULT_TOTP_CONFIG.algorithm;
     const digits = config.digits ?? DEFAULT_TOTP_CONFIG.digits;
@@ -54,7 +70,16 @@ export class TotpConfiguration implements TotpConfig {
     return new TotpConfiguration(algorithm, digits, period);
   }
 
-  /** Returns a new configuration with the given fields overridden. */
+  /**
+   * Returns a new configuration with the given fields overridden.
+   *
+   * @param overrides fields to change; anything omitted is kept as-is.
+   *
+   * @example
+   * ```ts
+   * const sha256Config = config.with({ algorithm: "SHA-256" });
+   * ```
+   */
   with(overrides: Partial<TotpConfig>): TotpConfiguration {
     return TotpConfiguration.create({ ...this.toConfig(), ...overrides });
   }

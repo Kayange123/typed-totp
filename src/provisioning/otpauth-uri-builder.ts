@@ -19,8 +19,24 @@ function toUriAlgorithm(algorithm: TotpAlgorithm): string {
  * responsibility from OTP generation: it only formats data that has
  * already been decided upon (secret, issuer, account, algorithm, digits,
  * period) and never touches cryptography.
+ *
+ * @example
+ * ```ts
+ * const uri = new OtpAuthUriBuilder().build({
+ *   issuer: "Acme",
+ *   account: "jane@example.com",
+ *   secret: "JBSWY3DPEHPK3PXP",
+ * });
+ * ```
  */
 export class OtpAuthUriBuilder {
+  /**
+   * @param options.issuer shown as the account's "issuer" in the authenticator app.
+   * @param options.account shown as the account label, e.g. the user's email.
+   * @param options.secret Base32-encoded shared secret.
+   * @throws {InvalidConfigurationError} if `issuer`, `account`, or `secret` is empty.
+   * @returns an `otpauth://` URI.
+   */
   build(options: OtpAuthUriOptions): string {
     const { issuer, account, secret } = options;
     const algorithm = options.algorithm ?? DEFAULT_ALGORITHM;

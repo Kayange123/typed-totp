@@ -30,6 +30,19 @@ export type TotpOptions = Partial<TotpConfig> & {
  * are injected with secure production defaults, so typical usage needs no
  * knowledge of the underlying ports. Provide `dependencies` only to
  * customize behaviour, most commonly a {@link FixedClock} in tests.
+ *
+ * @example
+ * ```ts
+ * const totp = new Totp({ secret, algorithm: "SHA-256", digits: 8, period: 30 });
+ * const token = await totp.generate();
+ * const valid = await totp.verify(token);
+ * ```
+ *
+ * @example Dependency injection (testing with a fixed clock)
+ * ```ts
+ * const totp = new Totp({ secret }, { clock: new FixedClock(1_700_000_000_000) });
+ * const token = await totp.generate(); // same result every time
+ * ```
  */
 export class Totp implements OtpGenerator {
   private readonly configuration: TotpConfiguration;
@@ -50,6 +63,15 @@ export class Totp implements OtpGenerator {
     return this.configuration.toConfig();
   }
 
+  /**
+   * @param options.timestamp Unix milliseconds to generate for, instead of the injected clock.
+   * @returns the current OTP for this instance's configuration and secret.
+   *
+   * @example
+   * ```ts
+   * const token = await totp.generate();
+   * ```
+   */
   async generate(options: TotpGenerateOptions = {}): Promise<string> {
     const timestamp = options.timestamp ?? this.deps.clock.now();
     const counter = calculateCounter(timestamp, this.configuration.period);
@@ -59,7 +81,18 @@ export class Totp implements OtpGenerator {
     });
   }
 
-  /** Verifies a token, returning only whether it was valid. */
+  /**
+   * Verifies a token, returning only whether it was valid.
+   *
+   * @param token the code the user submitted.
+   * @param options `window` (clock-drift tolerance) and/or an explicit `timestamp`.
+   * @returns `true` if `token` matches.
+   *
+   * @example
+   * ```ts
+   * const valid = await totp.verify(token, { window: 1 });
+   * ```
+   */
   async verify(token: string, options: TotpVerifyOptions = {}): Promise<boolean> {
     const result = await this.verifyDetailed(token, options);
     return result.valid;
@@ -70,6 +103,18 @@ export class Totp implements OtpGenerator {
    *
    * `options.window` controls how many steps of clock drift are tolerated
    * on either side of the current step (default `0`: exact match only).
+   *
+   * @param token the code the user submitted.
+   * @param options `window` (clock-drift tolerance) and/or an explicit `timestamp`.
+   * @returns `{ valid: true, delta, counter }` on success, `{ valid: false }` otherwise.
+   *
+   * @example
+   * ```ts
+   * const result = await totp.verifyDetailed(token, { window: 1 });
+   * if (result.valid) {
+   *   console.log(`clock drift: ${result.delta} step(s)`);
+   * }
+   * ```
    */
   async verifyDetailed(
     token: string,
@@ -110,6 +155,15 @@ export class Totp implements OtpGenerator {
    * Returns a new `Totp` with the given configuration fields overridden,
    * sharing the same secret and dependencies. Prefer this over mutating
    * an existing instance.
+   *
+   * @param overrides configuration fields to change; anything omitted is kept as-is.
+   * @returns a new, independent `Totp` instance.
+   *
+   * @example
+   * ```ts
+   * const sha1 = new Totp({ secret });
+   * const sha256 = sha1.with({ algorithm: "SHA-256", digits: 8 });
+   * ```
    */
   with(overrides: Partial<TotpConfig>): Totp {
     const nextConfig = this.configuration.with(overrides).toConfig();

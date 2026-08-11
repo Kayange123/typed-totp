@@ -14,11 +14,24 @@ const DEFAULT_BYTE_LENGTH = 20; // 160 bits, RFC 4226's recommendation for HMAC-
  * {@link generate}) instead of being repeated wherever a secret is used.
  * The raw bytes are never exposed directly; {@link toBytes} always returns
  * a defensive copy so callers cannot mutate internal state.
+ *
+ * @example
+ * ```ts
+ * const secret = TotpSecret.generate({ byteLength: 32 });
+ * const fromStorage = TotpSecret.fromBase32(secret.toBase32());
+ * ```
  */
 export class TotpSecret {
   private constructor(private readonly bytes: Uint8Array) {}
 
-  /** Wraps raw secret bytes. Throws if `bytes` is empty. */
+  /**
+   * Wraps raw secret bytes. Throws if `bytes` is empty.
+   *
+   * @example
+   * ```ts
+   * const secret = TotpSecret.fromBytes(new TextEncoder().encode("12345678901234567890"));
+   * ```
+   */
   static fromBytes(bytes: Uint8Array): TotpSecret {
     if (bytes.length === 0) {
       throw new InvalidSecretError("Secret bytes must not be empty");
@@ -26,7 +39,14 @@ export class TotpSecret {
     return new TotpSecret(Uint8Array.from(bytes));
   }
 
-  /** Decodes a Base32-encoded secret (as produced by authenticator apps). */
+  /**
+   * Decodes a Base32-encoded secret (as produced by authenticator apps).
+   *
+   * @example
+   * ```ts
+   * const secret = TotpSecret.fromBase32("JBSWY3DPEHPK3PXP");
+   * ```
+   */
   static fromBase32(value: string, codec: SecretCodec = new Base32Codec()): TotpSecret {
     const bytes = codec.decode(value);
     if (bytes.length === 0) {
@@ -35,7 +55,16 @@ export class TotpSecret {
     return new TotpSecret(bytes);
   }
 
-  /** Generates a new cryptographically random secret. */
+  /**
+   * Generates a new cryptographically random secret.
+   *
+   * @param options.byteLength number of random bytes (default 20 / 160 bits).
+   *
+   * @example
+   * ```ts
+   * const secret = TotpSecret.generate({ byteLength: 32 }); // for SHA-256/512
+   * ```
+   */
   static generate(
     options: SecretGenerationOptions = {},
     random: RandomSource = new WebCryptoRandomSource()

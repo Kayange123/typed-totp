@@ -16,6 +16,13 @@ const DEFAULT_DIGITS: TotpDigits = 6;
  * step, then HOTP does counter encoding -> HMAC -> dynamic truncation ->
  * decimal formatting. Kept independently testable against the official
  * RFC 4226 vectors.
+ *
+ * @example
+ * ```ts
+ * const hotp = new Hotp();
+ * const code = await hotp.generate(secretBytes, 0n); // counter 0
+ * const next = await hotp.generate(secretBytes, 1n); // counter 1, after each use
+ * ```
  */
 export class Hotp {
   private readonly hmac: HmacProvider;
@@ -27,8 +34,17 @@ export class Hotp {
   /**
    * Generates an HOTP code for the given secret and counter.
    *
-   * @param secret raw secret bytes (not Base32-encoded).
-   * @param counter the moving factor (RFC 4226 §5).
+   * @param secret raw secret bytes (not Base32-encoded — decode first via {@link TotpSecret} if needed).
+   * @param counter the moving factor (RFC 4226 §5). Callers are responsible for incrementing
+   * it after each successful use; this method never mutates or tracks it.
+   * @param options.algorithm HMAC hash algorithm (default `"SHA-1"`).
+   * @param options.digits number of digits in the returned code (default `6`).
+   * @returns the OTP as a zero-padded decimal string, e.g. `"755224"`.
+   *
+   * @example
+   * ```ts
+   * const code = await hotp.generate(secretBytes, 42n, { algorithm: "SHA-256", digits: 8 });
+   * ```
    */
   async generate(secret: Uint8Array, counter: bigint, options: HotpOptions = {}): Promise<string> {
     const algorithm = options.algorithm ?? DEFAULT_ALGORITHM;

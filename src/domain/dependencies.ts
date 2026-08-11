@@ -13,6 +13,15 @@ import { ConstantTimeComparator } from "../adapters/constant-time-comparator.js"
  * applied automatically for any dependency not explicitly overridden.
  * Call it yourself only if you want the defaults as a starting point for
  * a partial override object.
+ *
+ * @returns a complete {@link TotpDependencies}, all backed by secure production adapters.
+ *
+ * @example
+ * ```ts
+ * // Override just the clock, keeping every other default:
+ * const deps = { ...createDefaultTotpDependencies(), clock: new FixedClock(0) };
+ * const totp = new Totp({ secret }, deps);
+ * ```
  */
 export function createDefaultTotpDependencies(): TotpDependencies {
   return {
